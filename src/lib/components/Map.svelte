@@ -2,18 +2,38 @@
 	import { onMount, onDestroy } from 'svelte';
 	import mapboxgl from 'mapbox-gl';
 	import 'mapbox-gl/dist/mapbox-gl.css';
+	import MapStylePicker from './MapStylePicker.svelte';
 
 	let map: mapboxgl.Map | null = null;
 	let mapContainer: HTMLElement | null = null;
-	let lng, lat, zoom;
+	let lng: number, lat: number, zoom: number;
+	const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
+	let mapStyle = 'mapbox://styles/mapbox/light-v9';
 
-	lng = 100.534942;
 	lat = 13.739861;
+	lng = 100.534942;
 	zoom = 9;
-
 	let initialState = { lng, lat, zoom };
 
-	const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
+	function updateData() {
+		lat = map?.getCenter()?.lat ?? lat;
+		lng = map?.getCenter()?.lng ?? lng;
+		zoom = map?.getZoom() ?? zoom;
+	}
+
+	function handleReset() {
+		lng = initialState.lng;
+		lat = initialState.lat;
+		zoom = initialState.zoom;
+		if (map) {
+			map.setCenter([lng, lat]);
+			map.setZoom(zoom);
+		}
+	}
+
+	function handleStyleChange(event) {
+		map.setStyle(event.target.value);
+	}
 
 	onMount(() => {
 		if (mapContainer) {
@@ -22,6 +42,10 @@
 				container: mapContainer,
 				center: [initialState.lng, initialState.lat],
 				zoom: initialState.zoom
+			});
+
+			map.on('move', () => {
+				updateData();
 			});
 		} else if (mapContainer === null) {
 			console.error('Map container is null');
@@ -37,12 +61,43 @@
 	});
 </script>
 
+<MapStylePicker currentStyle={mapStyle} on:change={handleStyleChange} />
 <div class="map" bind:this={mapContainer} />
+
+<div class="sidebar">
+	Longitude: {lng.toFixed(4)} | Latitude: {lat.toFixed(4)} | Zoom:
+	{zoom.toFixed(2)}
+</div>
+
+<button onclick={handleReset} class="reset-button">Reset</button>
 
 <style>
 	.map {
 		position: absolute;
 		width: 100%;
 		height: 100%;
+	}
+
+	.sidebar {
+		background-color: rgb(35 55 75 / 90%);
+		color: #fff;
+		padding: 6px 12px;
+		font-family: monospace;
+		z-index: 1;
+		position: absolute;
+		top: 50px;
+		left: 0;
+		margin: 12px;
+		border-radius: 4px;
+	}
+
+	.reset-button {
+		position: absolute;
+		top: 100px;
+		z-index: 1;
+		left: 12px;
+		padding: 4px 10px;
+		border-radius: 10px;
+		cursor: pointer;
 	}
 </style>
