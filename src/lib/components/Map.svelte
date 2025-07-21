@@ -31,8 +31,11 @@
 		}
 	}
 
-	function handleStyleChange(event) {
-		map.setStyle(event.target.value);
+	function handleStyleChange(event: Event) {
+		const target = event.target as HTMLSelectElement;
+		if (map) {
+			map.setStyle(target.value);
+		}
 	}
 
 	onMount(() => {
@@ -62,7 +65,7 @@
 </script>
 
 <MapStylePicker currentStyle={mapStyle} on:change={handleStyleChange} />
-<div class="map" bind:this={mapContainer} />
+<div class="map" bind:this={mapContainer}></div>
 
 <div class="sidebar">
 	Longitude: {lng.toFixed(4)} | Latitude: {lat.toFixed(4)} | Zoom:
